@@ -4,75 +4,30 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Voice on Time</title>
+    <title>Voice on Cue</title>
     <link href="https://unpkg.com/tailwindcss@^1.0/dist/tailwind.min.css" rel="stylesheet" />
     <style>
-        .progress::after {
-            content: " ";
-            position: absolute;
-            z-index: -1;
-            top: 0;
-            left: 0;
-            width: 0%;
-            height: 100%;
+        .selected {
             background-color: #c6f6d5;
         }
 
-        .progress-0::after {
-            width: 0%
+        .queued {
+            background-color: #c6ecf6;
         }
 
-        .progress-1::after {
-            width: 10%
-        }
-
-        .progress-2::after {
-            width: 20%
-        }
-
-        .progress-3::after {
-            width: 30%
-        }
-
-        .progress-4::after {
-            width: 40%
-        }
-
-        .progress-5::after {
-            width: 50%
-        }
-
-        .progress-6::after {
-            width: 60%
-        }
-
-        .progress-7::after {
-            width: 70%
-        }
-
-        .progress-8::after {
-            width: 80%
-        }
-
-        .progress-9::after {
-            width: 90%
-        }
-
-        .progress-10::after {
-            width: 100%
-        }
     </style>
 </head>
 
 <body>
     <div id="app" class="">
-        <div v-show="!countdown" class="p-5 max-w-screen-md m-auto">
+        <div v-show="items == null" class="p-5 max-w-screen-md m-auto">
             <div class="container mb-2">
                 <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold p-1 px-3 rounded"
                     @click="doTheThing">Do
                     the thing</button>
                 <div class="text-sm text-gray-800 float-right">
-                    <a href="https://github.com/bacanu/voice-on-time" class="p-1 text-blue-700 hover:text-blue-900">Source on Github</a>
+                    <a href="https://github.com/bacanu/voice-on-time"
+                        class="p-1 text-blue-700 hover:text-blue-900">Source on Github</a>
                     <a href="#howto" class="p-1 text-blue-700 hover:text-blue-900">How to use</a>
                     <span class="p-1">Your edits are auto-saved.</span>
                 </div>
@@ -84,60 +39,26 @@
             </div>
             <div class="my-3" id="howto">
                 <strong>How to use:</strong><br>
-                Each line is a command. <br>
-                Each line is executed in order. <br>
-                Start a line with <strong>Say</strong> and the british robot lady will read it. <br>
-                Start a line with <strong>Wait</strong> and a timer for x seconds will be shown. <br>
-                Start a line with <strong>Beep</strong> and a short beep is played. <br>
-                Start a line with <strong>Beeep</strong> and a longer beep is played. <br>
-                The "script" you write is auto-saved locally, on your browser. <br>
-                Start the "script" by hitting the "Do the thing" button. <br>
-                Reload the page to reset the countdown once started. <br>
+                Each paragraph is a chunk of speech. <br>
+                The voice reads the paragraph and when it reaches the end, the voice stops and waits for a click to
+                start reading the next paragraph, if any. <br>
+                <br>
                 For bugs, feature requests and feedback, create a new issue at: <a
                     class="text-blue-700 hover:text-blue-900"
                     href="https://github.com/bacanu/voice-on-time/issues">https://github.com/bacanu/voice-on-time/issues</a>
 
             </div>
-
-            <div class="links my-10">
-                <a class="py-1 text-sm text-blue-700 hover:text-red-700" href="#" @click.prevent="reloadCchw">Reload the
-                    initial workout (overwrites your changes)</a>
-                <a class="p-1 text-sm text-blue-700 hover:text-blue-900"
-                    href="https://www.reddit.com/r/bodyweightfitness/comments/fjyhyo/coronavirus_curfew_home_workout_12_min_session_no/">Source
-                    of the workout on reddit</a>
-            </div>
         </div>
-        <div v-show="countdown" class="progress" v-bind:class="{
-            'progress-0': (computedElapsed == 0 ),
-            'progress-1': (computedElapsed == 1 ),
-            'progress-2': (computedElapsed == 2 ),
-            'progress-3': (computedElapsed == 3 ),
-            'progress-4': (computedElapsed == 4 ),
-            'progress-5': (computedElapsed == 5 ),
-            'progress-6': (computedElapsed == 6 ),
-            'progress-7': (computedElapsed == 7 ),
-            'progress-8': (computedElapsed == 8 ),
-            'progress-9': (computedElapsed == 9 ),
-            'progress-10': (computedElapsed == 10 )
-        }">
+        <div v-show="items != null" class="select-none cursor-pointer" >
 
-            <div v-if="countdown" class="container max-w-screen-md m-auto text-3xl text-center p-6">
-                <div v-if="countdown.type == 'voice'">
-                    {{ countdown.value }}
-                </div>
-                <div v-if="countdown.type == 'time'">
-                    {{ countdown.value - countdown.elapsed }}s left.
-                </div>
-                <div v-if="countdown.type == 'shortbeep'">
-                    beep
-                </div>
-                <div v-if="countdown.type == 'longbeep'">
-                    BEEEP
+            <div class="container max-w-screen-md m-auto text-xl ">
+                <div v-for="item in items" 
+                    @click="readItem(item)" 
+                    class="pl-2" 
+                    :class="{'selected': (item == paragraph), 'queued': _.includes(queued, item)}">
+                        <p class="p-3 pl-2 hover:bg-gray-300 whitespace-pre-line">{{ item }}</p>
                 </div>
             </div>
-            <video loop="loop" id="video" class="m-auto" style="opacity: 0;">
-                <source src="video.mp4" type="video/mp4">
-            </video>
         </div>
     </div>
     <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.15/lodash.min.js"
@@ -153,49 +74,9 @@
             localStorage.setItem("text", text);
         }
 
-        var cchw = `Say Push Ups --- 1 minute then 1 minute rest. Start at the beep.
-Wait 5 seconds
-Beep
-Wait 60 seconds
-Say Rest for 1 minute
-
-Wait 50 seconds
-Say Get ready for "Double leg squat jumps" in 10 seconds. Wait for the beep.
-Wait 10 seconds
-Beep
-Wait 60 seconds
-Say Rest for 1 minute
-
-Wait 50 seconds
-Say Get ready for "Push-through crunches" in 10 seconds. Wait for the beep.
-Wait 10 seconds
-Beep
-Wait 60 seconds
-Say Rest for 1 minute
-
-Wait 50 seconds
-Say Get ready to "Plank" in 10 seconds. Wait for the beep.
-Wait 10 seconds
-Beep
-Wait 60 seconds
-Say Rest for 1 minute
-
-Wait 50 seconds
-Say Get ready for "Bicycle Crunches" in 10 seconds. Wait for the beep.
-Wait 10 seconds
-Beep
-Wait 60 seconds
-Say Rest for 1 minute
-
-Wait 50 seconds
-Say Almost done. Get ready for another round of "Push ups". Wait for the beep.
-Wait 10 seconds
-Beep
-Wait 60 seconds
-Beep
-Beep
-Beep
-Say We are beeping done. Congratulations, you can go back to reddit now.`
+        var cchw = `First paragraph here
+        
+        second paragraph here`
 
         function getFromLocal() {
             var s = localStorage.getItem("text")
@@ -208,29 +89,16 @@ Say We are beeping done. Congratulations, you can go back to reddit now.`
         }
 
         function scriptToItems(script) {
-            var lines = _.split(script, /\r?\n/);
+            let lines = _.split(script, /(?:\r\r|\n\n|\r\n\r\n)/);
 
-            var items = [];
+            let items = [];
 
             lines.forEach((line) => {
-                var line = _.trim(line).toLowerCase();
-
-                if (_.startsWith(line, "say")) {
-                    var text = line.substring(4).trim();
-
-                    items.push({ type: "voice", value: text })
-                }
-
-                if (_.startsWith(line, "wait ")) {
-                    var value = parseInt(line.match(/([0-9]+)/gi)[0])
-
-                    items.push({ type: "time", value: value, elapsed: 0 })
-                }
-                if (_.startsWith(line, "beep")) {
-                    items.push({ type: "shortbeep" })
-                }
-                if (_.startsWith(line, "beee")) {
-                    items.push({ type: "longbeep" })
+                console.log(line, line.length)
+                var line = line.replace(/^[\n\r]+/g, '').replace(/[\n\r]+$/g, '');
+                console.log(line)
+                if (line.length > 0) {
+                    items.push(line)
                 }
             })
 
@@ -241,110 +109,52 @@ Say We are beeping done. Congratulations, you can go back to reddit now.`
             el: "#app",
             data: {
                 script: "",
-                countdown: null,
-            },
-            computed: {
-                computedElapsed() {
-                    var that = this;
-
-                    if (!this.countdown || !this.countdown.elapsed) {
-                        return 0;
-                    }
-
-                    return Math.floor((this.countdown.elapsed / this.countdown.value) * 10);
-                }
+                paragraph: null,
+                paragraphMsg: null,
+                items: null,
+                queued: [],
             },
             methods: {
-                reloadCchw() {
-                    this.script = cchw;
-                },
-                doTheThing() {
-                    var video = document.querySelector("#video");
-
-                    var that = this;
-                    var items = scriptToItems(this.script);
-
-                    function chain(promise, remaining) {
-                        if (remaining.length == 0) {
-                            promise(() => {
-                                that.countdown = null;
-                                video.pause()
-                            });
-                            return;
-                        }
-
-                        var p = _.head(remaining)
-                        var remaining = _.tail(remaining)
-
-                        promise(() => { chain(p, remaining) })
+                readItem(item) {
+                    if(this.paragraph) {
+                        this.queued.push(item)
+                        return
                     }
 
-                    var promises = items.map((item) => {
-                        return function (cb) {
-                            that.countdown = item;
-                            if (video) {
-                                video.play();
-                            }
+                    return new Promise((resolve, reject) => {
+                        this.paragraph = item 
+                        let msg = new SpeechSynthesisUtterance(item);
+                        msg.voice = voice;
+                        msg.pitch = 1; //0 to 2
+                        msg.onend = (() => { resolve(); })
+                        msg.onerror = (() => { reject();})
 
-                            if (item.type == "voice") {
-                                return new Promise((resolve, reject) => {
-                                    var msg = new SpeechSynthesisUtterance(item.value);
-                                    msg.voice = voice;
-                                    msg.pitch = 1; //0 to 2
-                                    msg.onend = (() => { resolve() })
-                                    msg.onerror = (() => { reject() })
-                                    window.speechSynthesis.speak(msg);
-                                }).then(cb)
-                            }
-                            if (item.type == "time") {
-                                return new Promise((resolve, reject) => {
-                                    item.elapsed = 0;
-                                    var t = setInterval(() => {
-                                        item.elapsed += 1
-                                    }, 1000)
+                        //workaround for the "end" event sometimes not firing
+                        //https://stackoverflow.com/a/55067370/1101584
+                        this.paragraphMsg = msg 
 
-                                    window.setTimeout(() => {
-                                        resolve()
-                                        item.elapsed = 0;
-                                        clearInterval(t);
-                                    }, item.value * 1000)
-                                }).then(cb)
-                            }
-                            if (item.type == "shortbeep") {
-                                return new Promise((resolve, reject) => {
-                                    var msg = new SpeechSynthesisUtterance("beep");
-                                    msg.voice = voice
-                                    msg.volume = 1; // 0 to 1
-                                    msg.rate = 1; // 0.1 to 10
-                                    msg.pitch = 1; //0 to 2
-                                    msg.onend = (() => { resolve() })
-                                    msg.onerror = (() => { reject() })
-                                    window.speechSynthesis.speak(msg);
-                                }).then(cb)
-                            }
-                            if (item.type == "longbeep") {
-                                return new Promise((resolve, reject) => {
-                                    var msg = new SpeechSynthesisUtterance("beep");
-                                    msg.voice = voice
-                                    msg.volume = 1; // 0 to 1
-                                    msg.rate = 0.1; // 0.1 to 10
-                                    msg.pitch = 1; //0 to 2
-                                    msg.onend = (() => { resolve() })
-                                    msg.onerror = (() => { reject() })
-                                    window.speechSynthesis.speak(msg);
-                                }).then(cb)
-                            }
+                        window.speechSynthesis.speak(msg);
+                    }).finally(() => {
+                        this.paragraph = null
+                        this.paragraphMsg = null
+
+                        let queuedItem = this.queued.shift()
+
+                        if (queuedItem) {
+                            this.readItem(queuedItem)
                         }
-                    })
-
-                    var initial = _.head(promises)
-                    var remaining = _.tail(promises)
-
-                    chain(initial, remaining);
+                    });
+                },
+                back() {
+                    this.items = null
+                },
+                doTheThing() {
+                    this.items = scriptToItems(this.script);
                 }
             },
             created() {
                 this.script = getFromLocal()
+
             },
             updated() {
                 saveLocally(this.script);
