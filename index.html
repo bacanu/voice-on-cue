@@ -26,7 +26,7 @@
                     @click="doTheThing">Do
                     the thing</button>
                 <div class="text-sm text-gray-800 float-right">
-                    <a href="https://github.com/bacanu/voice-on-time"
+                    <a href="https://github.com/bacanu/voice-on-cue"
                         class="p-1 text-blue-700 hover:text-blue-900">Source on Github</a>
                     <a href="#howto" class="p-1 text-blue-700 hover:text-blue-900">How to use</a>
                     <span class="p-1">Your edits are auto-saved.</span>
@@ -45,7 +45,7 @@
                 <br>
                 For bugs, feature requests and feedback, create a new issue at: <a
                     class="text-blue-700 hover:text-blue-900"
-                    href="https://github.com/bacanu/voice-on-time/issues">https://github.com/bacanu/voice-on-time/issues</a>
+                    href="https://github.com/bacanu/voice-on-cue/issues">https://github.com/bacanu/voice-on-cue/issues</a>
 
             </div>
         </div>
@@ -74,7 +74,7 @@
             localStorage.setItem("text", text);
         }
 
-        var cchw = `First paragraph here
+        var defaultText = `First paragraph here
 
 second paragraph here`
 
@@ -84,7 +84,7 @@ second paragraph here`
             if (s) {
                 return s;
             } else {
-                return cchw;
+                return defaultText;
             }
         }
 
